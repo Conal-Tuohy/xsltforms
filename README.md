@@ -39,7 +39,11 @@ The main components for XSLTForms are :
 tXs is an XML script engine written in PHP 5. It is composed of an unique file
 named `txs.php` while scripts usually have a `.txs` extension.
 
-First, install Apache+PHP5 locally, and activate the Rewrite Module.
+First, locally install Apache, PHP5, and PHP5's XSLT processor. On Debian-related Linux distributions:
+
+`apt-get install apache2 php5 php5-xsl`
+
+Activate the Apache Rewrite Module.
 
 Get all the XSLTForms files from SVN server into a subfolder (named
 `XSLTFormsRoot` for example) of the DocumentRoot folder (a `.htaccess` file
