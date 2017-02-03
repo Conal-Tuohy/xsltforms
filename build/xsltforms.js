@@ -1710,7 +1710,7 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 	XsltForms_browser.loadDoc = function(dest, xml) {
 		XsltForms_browser.loadNode(dest.documentElement, xml);
 	};
-	XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, related, cdataSectionElements) {
+	XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, method, cdataSectionElements) {
 		if (node.nodeType === Fleur.Node.ATTRIBUTE_NODE) { 
 			return node.nodeValue;
 		} else {
@@ -1754,7 +1754,7 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 				if (indent) {
 					return xmlDoc.transformNode(XsltForms_browser.xsltDocIndent);
 				}
-				if (related) {
+				if (method === "multipart-post") {
 					var z = relevant ? xmlDoc.transformNode(XsltForms_browser.xsltDocRelevantAnyURI) : xmlDoc.transformNode(XsltForms_browser.xsltDocAnyURI);
 					var cids = [];
 					var m1 = z.indexOf("$!$!$!$!$!");
@@ -1919,7 +1919,7 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 		XsltForms_browser.loadDoc = function(dest, srcDoc) {
 			XsltForms_browser.loadNode(dest.documentElement, srcDoc);
 		};
-		XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, related, cdataSectionElements) {
+		XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, method, cdataSectionElements) {
 			if (node.nodeType === Fleur.Node.ATTRIBUTE_NODE) { 
 				return node.nodeValue;
 			} else {
@@ -1944,8 +1944,8 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 							}
 						}
 					}
-					if (related) {
-						var ns3 = resultDocument.selectNodes("descendant::*[(substring-after(@xsltforms_type,':') = 'anyURI' or substring-after(@*[local-name() = 'type' and namespace-uri='http://www.w3.org/2001/XMLSchema-instance'],':') = 'anyURI') and . != '']", false, resultDocument.documentElement);
+					if (method === "multipart-post") {
+						var ns3 = resultDocument.selectNodes("descendant::*[(substring-after(@xsltforms_type,':') = 'anyURI' or substring-after(@*[local-name() = 'type' and namespace-uri()='http://www.w3.org/2001/XMLSchema-instance'],':') = 'anyURI') and . != '']", false, resultDocument.documentElement);
 						for( var i3 = 0, l3 = ns3.length; i3 < l3 ; i3++) {
 							var n3 = ns3[i3];
 							try {
@@ -1992,7 +1992,7 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 							}
 						}
 					}
-					if (related) {
+					if (method === "multipart-post") {
 						var z = XsltForms_browser.serializer.serializeToString(resultDocument);
 						var cids = [];
 						var m1 = z.indexOf("$!$!$!$!$!");
@@ -2107,7 +2107,7 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 			}
 		};
 		XsltForms_browser.loadDoc = XsltForms_browser.loadNode;
-		XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, related, cdataSectionElements) {
+		XsltForms_browser.saveNode = function(node, mediatype, relevant, indent, method, cdataSectionElements) {
 			return XsltForms_browser.serializer.serializeToString(node, mediatype, indent === "yes");
 		};
 		XsltForms_browser.saveDoc = XsltForms_browser.saveNode;
@@ -7705,7 +7705,7 @@ XsltForms_submission.prototype.xml2data = function(node, method) {
 		}
 		return XsltForms_browser.xml2zip(instance.archive, this.mediatype);
 	}
-	var ser = node ? typeof node === "string" ? node : method === "urlencoded-post" ? XsltForms_submission.toUrl_(node, this.separator) : XsltForms_browser.saveNode(node, "application/xml", this.relevant, false, method === "multipart-post", this.cdataSectionElements) : "";
+	var ser = node ? typeof node === "string" ? node : method === "urlencoded-post" ? XsltForms_submission.toUrl_(node, this.separator) : XsltForms_browser.saveNode(node, "application/xml", this.relevant, false, method, this.cdataSectionElements) : "";
 	if (this.mediatype === "text/csv" && typeof node !== "string") { 
 		return XsltForms_browser.xml2csv(ser, this.separator);
 	}
