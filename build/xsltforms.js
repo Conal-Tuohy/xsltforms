@@ -2052,8 +2052,13 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 				}
 			}
 		};
-		XsltForms_browser.saveDoc = function(doc, mediatype, relevant, indent, related, cdataSectionElements) {
-			return XsltForms_browser.saveNode(doc.documentElement, mediatype, relevant, indent, related, cdataSectionElements);
+		// changed by conal.tuohy@gmail.com:
+		// previously, saveDoc was declared as a function with 6 parameters, but it is never called with any other than 2 or 3:
+		// XsltForms_browser.saveDoc = function(doc, mediatype, relevant, indent, related, cdataSectionElements) 
+		// I am changing the 5th parameter of saveNode, so I'm trimming the parameter lists of both saveDoc and saveNode
+		// here to avoid propagating that change from saveNode to saveDoc.
+		XsltForms_browser.saveDoc = function(doc, mediatype, relevant) {
+			return XsltForms_browser.saveNode(doc.documentElement, mediatype, relevant);
 		};
 		XsltForms_browser.selectMeta = function(node, selection) {
 			var i, li;
