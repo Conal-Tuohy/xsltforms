@@ -1930,6 +1930,82 @@ if (XsltForms_domEngine === "" && (XsltForms_browser.isIE || XsltForms_browser.i
 						node = node.nextSibling;
 					}
 					return s;
+				} else if (method === "form-data-post") {
+					// for form-data-post, see https://www.w3.org/TR/xforms11/#serialize-form-data
+					// serialize all leaf elements, whether populated or empty
+					var resultDocument = XsltForms_browser.createXMLDocument(XsltForms_browser.serializer.serializeToString(node));
+					if (relevant) {
+						if (resultDocument.selectNodes) {
+							var ns = resultDocument.selectNodes("descendant::*[@xsltforms_notrelevant = 'true']", false, resultDocument.documentElement);
+							for( var i = 0, l = ns.length; i < l ; i++) {
+								var n = ns[i];
+								try {
+									n.parentNode.removeChild(n);
+								} catch (e) {
+								}
+							}
+						}
+					}
+
+					var boundary = "xsltformsrev" + XsltForms_globals.fileVersionNumber;
+					var z = "Content-Type: multipart/form-data; boundary=";
+					z += boundary + "\r\n\r\n";
+					z += "--" + boundary + "\r\n";
+					
+					// traverse leaf elements
+					var leaves = resultDocument.selectNodes("descendant::*[not(*)]", false, resultDocument.documentElement);
+					for( var iLeaf = 0, numberOfLeaves = leaves.length; iLeaf < numberOfLeaves ; iLeaf++) {
+						var leaf = leaves[iLeaf];
+						try {
+							z += "Content-Disposition: form-data; name=\"";
+							z += leaf.localName;
+							z += "\"\r\n";
+							// serialize element's text content or binary content of named file if type is anyURI
+							// QAZ why this XPath instead of "@xsi:type"?
+							var dataType = XsltForms_browser.selectSingleNodeText(
+								"@xsi:type", 
+								leaf,
+								""
+							);
+							if (dataType === "xsd:anyURI") {
+								// TODO also implement xsd:base64Binary and xsd:hexBinary
+								var uriAndContentId = leaf.firstChild.nodeValue;
+								var contentId = uriAndContentId.substr(uriAndContentId.indexOf("?id=") + 4);
+								var zc = "";
+								if (XsltForms_browser.isSafari) {
+									var zc0 = XsltForms_upload.contents[contentId];
+									for (var zci = 0, zcl = zc0.length; zci < zcl; zci++) {
+										var zcc = zc0.charCodeAt(zci);
+										if (zcc < 128) {
+											zc += String.fromCharCode(zcc);
+										} else {
+											if ((zcc > 191) && (zcc < 224)) {
+												zc += String.fromCharCode(((zcc & 31) << 6) | (zc0.charCodeAt(++zci) & 63));
+											} else {
+												zc += String.fromCharCode(((zcc & 15) << 12) | ((zc0.charCodeAt(++zci) & 63) << 6) | (zc0.charCodeAt(++zci) & 63));
+											}
+										}
+									}
+								} else {
+									var zc0b = new Uint8Array(XsltForms_upload.contents[contentId]);
+									for (var zcib = 0, zclb = zc0b.length; zcib < zclb; zcib++) {
+										zc += String.fromCharCode(zc0b[zcib]);
+									}
+								}
+								// TODO set specific content type (if known)
+								z += "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n";
+								z += zc;
+							} else {
+								// string value of element
+								z += "Content-Type: text/plain\r\n";
+								z += leaf.firstChild.nodeValue;
+							}
+							z += "\r\n";
+							z += "--" + boundary + "\r\n";
+						} catch (e3) {
+						}
+					}
+					return z;					
 				} else {
 					var resultDocument = XsltForms_browser.createXMLDocument(XsltForms_browser.serializer.serializeToString(node));
 					if (relevant) {
